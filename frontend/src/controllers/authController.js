@@ -15,6 +15,7 @@ export const loadCurrentUser = () => async (dispatch) => {
     const response = await apiClient.get("/auth/me");
     dispatch(setAuthUser(normalizeUser(response.data?.user ?? response.data)));
   } catch {
+    window.localStorage.removeItem("tap_auth_token");
     dispatch(clearAuth());
     dispatch(setAuthInitialized());
   }
@@ -29,6 +30,7 @@ export const logout = () => async (dispatch) => {
   dispatch(setAuthLoading());
   try {
     await apiClient.post("/auth/logout");
+    window.localStorage.removeItem("tap_auth_token");
     dispatch(clearAuth());
   } catch (error) {
     dispatch(setAuthError(error.message));

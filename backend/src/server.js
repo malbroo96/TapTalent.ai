@@ -2,6 +2,7 @@ import "dotenv/config";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
+import mongoose from "mongoose";
 import passport from "passport";
 import { connectDB } from "./config/db.js";
 import { configurePassport } from "./config/passport.js";
@@ -24,6 +25,16 @@ app.use(cookieParser());
 configurePassport();
 app.use(passport.initialize());
 
+app.get("/api/health", (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    mongoReadyState: mongoose.connection?.readyState ?? -1,
+    hasJwtSecret: Boolean(process.env.JWT_SECRET),
+    hasGoogleClientId: Boolean(process.env.GOOGLE_CLIENT_ID),
+    hasGoogleClientSecret: Boolean(process.env.GOOGLE_CLIENT_SECRET),
+  });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/weather", weatherRoutes);
 app.use("/api/user", userRoutes);
@@ -35,13 +46,22 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await connectDB();
+    console.log("[boot] Mongo connected. readyState:", mongoose.connection.readyState);
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      console.log(`[boot] Server running on port ${PORT}`);
     });
   } catch (error) {
-    console.error("Failed to start server");
+    console.error("[boot] Failed to start server:", error.message);
     process.exit(1);
   }
 };
+
+process.on("unhandledRejection", (reason) => {
+  console.error("[process] unhandledRejection:", reason?.message || reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("[process] uncaughtException:", error.message);
+});
 
 startServer();

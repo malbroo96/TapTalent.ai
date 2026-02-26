@@ -1,9 +1,23 @@
 import User from "../models/User.js";
 import { authCookieName, verifyToken } from "../services/tokenService.js";
 
+const getBearerToken = (req) => {
+  const header = req.headers?.authorization;
+  if (!header || typeof header !== "string") {
+    return null;
+  }
+
+  const [scheme, token] = header.split(" ");
+  if (scheme?.toLowerCase() !== "bearer" || !token) {
+    return null;
+  }
+
+  return token;
+};
+
 export const authMiddleware = async (req, res, next) => {
   try {
-    const token = req.cookies?.[authCookieName];
+    const token = req.cookies?.[authCookieName] || getBearerToken(req);
     if (!token) {
       return res.status(401).json({ message: "Authentication required" });
     }

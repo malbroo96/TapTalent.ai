@@ -12,8 +12,20 @@ const AppLayout = ({ children }) => {
   const unit = useSelector((state) => state.settings.unit);
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+    if (token) {
+      window.localStorage.setItem("tap_auth_token", token);
+      params.delete("token");
+      const next = params.toString();
+      const nextUrl = `${location.pathname}${next ? `?${next}` : ""}${location.hash || ""}`;
+      window.history.replaceState({}, "", nextUrl);
+    }
+  }, [location.hash, location.pathname, location.search]);
+
+  useEffect(() => {
     dispatch(loadCurrentUser());
-  }, [dispatch]);
+  }, [dispatch, location.key]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);

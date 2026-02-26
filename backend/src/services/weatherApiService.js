@@ -10,6 +10,28 @@ const getApiKey = () => {
   return apiKey;
 };
 
+const toServiceError = (error) => {
+  if (error.response) {
+    const status = error.response.status;
+    const upstreamMessage = error.response.data?.message;
+    const message =
+      status === 404
+        ? "City not found"
+        : upstreamMessage || "Weather provider request failed";
+    const mapped = new Error(message);
+    mapped.statusCode = status;
+    return mapped;
+  }
+
+  if (error.request) {
+    const mapped = new Error("Weather provider is unavailable");
+    mapped.statusCode = 503;
+    return mapped;
+  }
+
+  return error;
+};
+
 const normalizeCurrent = (payload) => ({
   city: payload.name,
   temperature: payload.main?.temp ?? 0,
@@ -54,30 +76,36 @@ const normalizeForecast = (payload) => {
 
 export const fetchCurrentWeather = async (city) => {
   const apiKey = getApiKey();
+  try {
+    const response = await axios.get(`${WEATHER_BASE_URL}/weather`, {
+      params: {
+        q: city,
+        appid: apiKey,
+        units: "metric",
+      },
+      timeout: 10000,
+    });
 
-  const response = await axios.get(`${WEATHER_BASE_URL}/weather`, {
-    params: {
-      q: city,
-      appid: apiKey,
-      units: "metric",
-    },
-    timeout: 10000,
-  });
-
-  return normalizeCurrent(response.data);
+    return normalizeCurrent(response.data);
+  } catch (error) {
+    throw toServiceError(error);
+  }
 };
 
 export const fetchForecastWeather = async (city) => {
   const apiKey = getApiKey();
+  try {
+    const response = await axios.get(`${WEATHER_BASE_URL}/forecast`, {
+      params: {
+        q: city,
+        appid: apiKey,
+        units: "metric",
+      },
+      timeout: 10000,
+    });
 
-  const response = await axios.get(`${WEATHER_BASE_URL}/forecast`, {
-    params: {
-      q: city,
-      appid: apiKey,
-      units: "metric",
-    },
-    timeout: 10000,
-  });
-
-  return normalizeForecast(response.data);
+    return normalizeForecast(response.data);
+  } catch (error) {
+    throw toServiceError(error);
+  }
 };

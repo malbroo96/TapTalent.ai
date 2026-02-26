@@ -13,6 +13,15 @@ const apiClient = axios.create({
   timeout: 15000,
 });
 
+apiClient.interceptors.request.use((config) => {
+  const token = window.localStorage.getItem("tap_auth_token");
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {

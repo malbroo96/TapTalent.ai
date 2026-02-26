@@ -1,0 +1,7 @@
+# Environment secrets
+backend/.env
+frontend/.env
+
+# Local logs
+backend/*.log
+*.log
