@@ -2,6 +2,7 @@ import { normalizeFavoriteCity } from "../models/userModel";
 import apiClient from "../services/apiClient";
 import {
   appendFavorite,
+  removeFavorite,
   setFavorites,
   setUserError,
   setUserLoading,
@@ -28,6 +29,16 @@ export const addFavoriteCity = (city) => async (dispatch) => {
       response.data?.favorite ?? { name: city },
     );
     dispatch(appendFavorite(favorite));
+  } catch (error) {
+    dispatch(setUserError(error.message));
+  }
+};
+
+export const removeFavoriteCity = (city) => async (dispatch) => {
+  dispatch(setUserLoading());
+  try {
+    await apiClient.delete(`/user/favorites/${encodeURIComponent(city)}`);
+    dispatch(removeFavorite(city));
   } catch (error) {
     dispatch(setUserError(error.message));
   }

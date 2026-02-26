@@ -29,6 +29,14 @@ const userSlice = createSlice({
       }
       state.status = "succeeded";
     },
+    removeFavorite: (state, action) => {
+      const cityName = action.payload.toLowerCase();
+      state.favorites = state.favorites.filter(
+        (item) => item.name.toLowerCase() !== cityName,
+      );
+      state.status = "succeeded";
+      state.error = null;
+    },
     setUserError: (state, action) => {
       state.status = "failed";
       state.error = action.payload;
@@ -36,7 +44,12 @@ const userSlice = createSlice({
   },
 });
 
-export const { setUserLoading, setFavorites, appendFavorite, setUserError } =
-  userSlice.actions;
+export const {
+  setUserLoading,
+  setFavorites,
+  appendFavorite,
+  removeFavorite,
+  setUserError,
+} = userSlice.actions;
 
 export default userSlice.reducer;

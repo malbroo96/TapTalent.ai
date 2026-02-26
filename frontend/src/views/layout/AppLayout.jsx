@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 import { logout, loadCurrentUser } from "../../controllers/authController";
 import { toggleDarkMode, toggleUnit } from "../../store/settingsSlice";
+import { getWeatherThemeBackground } from "../../utils/weatherTheme";
 
 const AppLayout = ({ children }) => {
   const dispatch = useDispatch();
@@ -10,6 +11,10 @@ const AppLayout = ({ children }) => {
   const user = useSelector((state) => state.auth.user);
   const darkMode = useSelector((state) => state.settings.darkMode);
   const unit = useSelector((state) => state.settings.unit);
+  const selectedCity = useSelector((state) => state.weather.selectedCity);
+  const selectedWeather = useSelector((state) =>
+    selectedCity ? state.weather.currentByCity[selectedCity.toLowerCase()] : null,
+  );
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -29,23 +34,32 @@ const AppLayout = ({ children }) => {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
+    document.documentElement.classList.toggle("light", !darkMode);
   }, [darkMode]);
 
   return (
-    <div className="min-h-screen px-4 py-6 md:px-8">
-      <header className="mx-auto mb-8 flex w-full max-w-6xl items-center justify-between rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-xl">
+    <div
+      className="min-h-screen px-4 py-6 md:px-8"
+      style={{
+        backgroundImage: getWeatherThemeBackground(
+          selectedWeather?.condition,
+          darkMode,
+        ),
+      }}
+    >
+      <header className="mx-auto mb-8 flex w-full max-w-6xl items-center justify-between rounded-2xl border border-slate-300/70 bg-white/70 px-4 py-3 text-slate-900 backdrop-blur-xl dark:border-white/20 dark:bg-white/10 dark:text-slate-100">
         <Link to="/" className="text-lg font-semibold tracking-wide">
           TapTalent Weather
         </Link>
         <div className="flex items-center gap-3">
           <button
-            className="rounded-xl bg-white/15 px-3 py-2 text-sm transition-all duration-300 hover:scale-105 hover:bg-white/25"
+            className="rounded-xl bg-slate-200/70 px-3 py-2 text-sm transition-all duration-300 hover:scale-105 hover:bg-slate-300/70 dark:bg-white/15 dark:hover:bg-white/25"
             onClick={() => dispatch(toggleUnit())}
           >
             {unit === "celsius" ? "Switch to degF" : "Switch to degC"}
           </button>
           <button
-            className="rounded-xl bg-white/15 px-3 py-2 text-sm transition-all duration-300 hover:scale-105 hover:bg-white/25"
+            className="rounded-xl bg-slate-200/70 px-3 py-2 text-sm transition-all duration-300 hover:scale-105 hover:bg-slate-300/70 dark:bg-white/15 dark:hover:bg-white/25"
             onClick={() => dispatch(toggleDarkMode())}
           >
             {darkMode ? "Light" : "Dark"}
@@ -53,7 +67,7 @@ const AppLayout = ({ children }) => {
           {user ? (
             <Link
               to="/settings"
-              className="rounded-xl bg-white/15 px-3 py-2 text-sm transition-all duration-300 hover:scale-105 hover:bg-white/25"
+              className="rounded-xl bg-slate-200/70 px-3 py-2 text-sm transition-all duration-300 hover:scale-105 hover:bg-slate-300/70 dark:bg-white/15 dark:hover:bg-white/25"
             >
               Settings
             </Link>

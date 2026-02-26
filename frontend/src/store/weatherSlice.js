@@ -6,6 +6,7 @@ const initialState = {
   status: "idle",
   error: null,
   selectedCity: "",
+  defaultCity: "",
 };
 
 // Slice owns state transitions only; side-effects are delegated to controllers.
@@ -23,6 +24,17 @@ const weatherSlice = createSlice({
       state.selectedCity = weather.city;
       state.status = "succeeded";
       state.error = null;
+    },
+    setDefaultCity: (state, action) => {
+      state.defaultCity = action.payload || "";
+    },
+    removeWeatherCity: (state, action) => {
+      const city = action.payload?.toLowerCase?.();
+      if (!city) return;
+      delete state.currentByCity[city];
+      if (state.selectedCity.toLowerCase() === city) {
+        state.selectedCity = Object.values(state.currentByCity)[0]?.city || "";
+      }
     },
     setWeatherForecast: (state, action) => {
       const { city, forecast } = action.payload;
@@ -47,6 +59,8 @@ const weatherSlice = createSlice({
 export const {
   setWeatherLoading,
   setWeatherCurrent,
+  setDefaultCity,
+  removeWeatherCity,
   setWeatherForecast,
   setWeatherError,
   clearWeatherError,

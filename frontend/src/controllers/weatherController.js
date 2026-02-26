@@ -3,6 +3,7 @@ import { normalizeWeather } from "../models/weatherModel";
 import apiClient from "../services/apiClient";
 import {
   setWeatherCurrent,
+  setDefaultCity,
   setWeatherError,
   setWeatherForecast,
   setWeatherLoading,
@@ -10,6 +11,9 @@ import {
 
 // Cache policy lives in controller layer so views stay pure and stateless.
 const CACHE_WINDOW_MS = 60 * 1000;
+const inFlightWeatherRequests = new Set();
+const inFlightForecastRequests = new Set();
+let isCoordinatesRequestInFlight = false;
 
 export const fetchWeatherByCity = (city) => async (dispatch, getState) => {
   const normalizedCity = city.trim().toLowerCase();
@@ -21,7 +25,11 @@ export const fetchWeatherByCity = (city) => async (dispatch, getState) => {
   if (cached && Date.now() - cached.fetchedAt < CACHE_WINDOW_MS) {
     return;
   }
+  if (inFlightWeatherRequests.has(normalizedCity)) {
+    return;
+  }
 
+  inFlightWeatherRequests.add(normalizedCity);
   dispatch(setWeatherLoading());
   try {
     const response = await apiClient.get("/weather", {
@@ -30,8 +38,36 @@ export const fetchWeatherByCity = (city) => async (dispatch, getState) => {
     dispatch(setWeatherCurrent(normalizeWeather(response.data)));
   } catch (error) {
     dispatch(setWeatherError(error.message));
+  } finally {
+    inFlightWeatherRequests.delete(normalizedCity);
   }
 };
+
+export const fetchWeatherByCoordinates =
+  ({ lat, lon }) =>
+  async (dispatch) => {
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      return;
+    }
+    if (isCoordinatesRequestInFlight) {
+      return;
+    }
+
+    isCoordinatesRequestInFlight = true;
+    dispatch(setWeatherLoading());
+    try {
+      const response = await apiClient.get("/weather", {
+        params: { lat, lon },
+      });
+      const normalized = normalizeWeather(response.data);
+      dispatch(setWeatherCurrent(normalized));
+      dispatch(setDefaultCity(normalized.city));
+    } catch (error) {
+      dispatch(setWeatherError(error.message));
+    } finally {
+      isCoordinatesRequestInFlight = false;
+    }
+  };
 
 export const fetchForecastByCity = (city) => async (dispatch, getState) => {
   const normalizedCity = city.trim().toLowerCase();
@@ -43,7 +79,11 @@ export const fetchForecastByCity = (city) => async (dispatch, getState) => {
   if (cached && Date.now() - cached.fetchedAt < CACHE_WINDOW_MS) {
     return;
   }
+  if (inFlightForecastRequests.has(normalizedCity)) {
+    return;
+  }
 
+  inFlightForecastRequests.add(normalizedCity);
   dispatch(setWeatherLoading());
   try {
     const response = await apiClient.get("/weather/forecast", {
@@ -57,5 +97,7 @@ export const fetchForecastByCity = (city) => async (dispatch, getState) => {
     );
   } catch (error) {
     dispatch(setWeatherError(error.message));
+  } finally {
+    inFlightForecastRequests.delete(normalizedCity);
   }
 };
