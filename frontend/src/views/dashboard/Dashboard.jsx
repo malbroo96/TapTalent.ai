@@ -31,14 +31,18 @@ const Dashboard = () => {
     () => Object.values(weatherState.currentByCity),
     [weatherState.currentByCity],
   );
+  const visibleFavorites = useMemo(
+    () => favorites.filter((item) => item?.name?.trim()),
+    [favorites],
+  );
   const suggestionPool = useMemo(() => {
     const knownCities = [
-      ...favorites.map((item) => item.name),
+      ...visibleFavorites.map((item) => item.name),
       ...weatherCards.map((item) => item.city),
       ...indiaCities,
     ];
     return [...new Set(knownCities.filter(Boolean))];
-  }, [favorites, weatherCards]);
+  }, [visibleFavorites, weatherCards]);
   const filteredSuggestions = useMemo(() => {
     const query = city.trim().toLowerCase();
     if (query.length < 2) {
@@ -233,11 +237,11 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {favorites.length ? (
+      {visibleFavorites.length ? (
         <section className="rounded-2xl border border-slate-300/70 bg-white/80 p-5 backdrop-blur-xl dark:border-white/20 dark:bg-white/10">
           <h3 className="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Favorite Cities</h3>
           <div className="flex flex-wrap gap-2">
-            {favorites.map((fav) => (
+            {visibleFavorites.map((fav) => (
               <div
                 key={fav.id || fav.name}
                 className="flex items-center gap-2 rounded-full bg-slate-200/70 px-4 py-2 text-sm text-slate-800 transition-all duration-300 hover:scale-105 dark:bg-white/15 dark:text-slate-100"
