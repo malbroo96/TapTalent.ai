@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchWeatherByCity,
-  fetchWeatherByCoordinates,
-} from "../../controllers/weatherController";
+import { fetchWeatherByCity } from "../../controllers/weatherController";
 import { removeWeatherCity } from "../../store/weatherSlice";
 import {
   addFavoriteCity,
@@ -14,8 +11,6 @@ import {
 import { indiaCities } from "../../utils/indiaCities";
 import { formatTemperature } from "../../utils/unitConverter";
 import WeatherCardSkeleton from "../layout/WeatherCardSkeleton";
-
-const SEARCH_DEBOUNCE_MS = 500;
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -62,44 +57,6 @@ const Dashboard = () => {
     }
   }, [dispatch, user]);
 
-  useEffect(() => {
-    if (!user || weatherCards.length > 0) {
-      return;
-    }
-
-    if (!("geolocation" in navigator)) {
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        dispatch(
-          fetchWeatherByCoordinates({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
-          }),
-        );
-      },
-      () => {
-        // User denied location or device lookup failed; keep manual search path.
-      },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
-    );
-  }, [dispatch, user, weatherCards.length]);
-
-  useEffect(() => {
-    const trimmedCity = city.trim();
-    if (trimmedCity.length < 2) {
-      return;
-    }
-
-    const timeoutId = setTimeout(() => {
-      dispatch(fetchWeatherByCity(trimmedCity));
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => clearTimeout(timeoutId);
-  }, [city, dispatch]);
-
   const onSearch = (event) => {
     event.preventDefault();
     if (city.trim()) {
@@ -123,7 +80,6 @@ const Dashboard = () => {
   const onSuggestionSelect = (name) => {
     setCity(name);
     setShowSuggestions(false);
-    dispatch(fetchWeatherByCity(name));
   };
 
   return (
@@ -234,11 +190,11 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <section className="rounded-2xl border border-slate-300/70 bg-white/80 p-5 backdrop-blur-xl dark:border-white/20 dark:bg-white/10">
-        <h3 className="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Favorite Cities</h3>
-        <div className="flex flex-wrap gap-2">
-          {favorites.length ? (
-            favorites.map((fav) => (
+      {favorites.length ? (
+        <section className="rounded-2xl border border-slate-300/70 bg-white/80 p-5 backdrop-blur-xl dark:border-white/20 dark:bg-white/10">
+          <h3 className="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Favorite Cities</h3>
+          <div className="flex flex-wrap gap-2">
+            {favorites.map((fav) => (
               <div
                 key={fav.id || fav.name}
                 className="flex items-center gap-2 rounded-full bg-slate-200/70 px-4 py-2 text-sm text-slate-800 transition-all duration-300 hover:scale-105 dark:bg-white/15 dark:text-slate-100"
@@ -253,12 +209,10 @@ const Dashboard = () => {
                   X
                 </button>
               </div>
-            ))
-          ) : (
-            <p className="text-sm text-slate-600 dark:text-slate-300">No favorites yet.</p>
-          )}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </section>
   );
 };
