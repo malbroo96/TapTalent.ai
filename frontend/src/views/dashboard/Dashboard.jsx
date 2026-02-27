@@ -20,7 +20,9 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [city, setCity] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [locationHint, setLocationHint] = useState("");
   const searchContainerRef = useRef(null);
+  const hasRequestedLocationRef = useRef(false);
 
   const weatherState = useSelector((state) => state.weather);
   const favorites = useSelector((state) => state.user.favorites);
@@ -78,15 +80,13 @@ const Dashboard = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!user || weatherCards.length > 0) {
-      return;
-    }
-
+  const requestCurrentLocationWeather = () => {
     if (!("geolocation" in navigator)) {
+      setLocationHint("Geolocation is not supported in this browser.");
       return;
     }
 
+    setLocationHint("");
     navigator.geolocation.getCurrentPosition(
       (position) => {
         dispatch(
@@ -97,10 +97,21 @@ const Dashboard = () => {
         );
       },
       () => {
-        // If denied or unavailable, keep manual search flow.
+        setLocationHint(
+          "Location access is blocked. Enable browser location permission and try again.",
+        );
       },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 },
     );
+  };
+
+  useEffect(() => {
+    if (!user || weatherCards.length > 0 || hasRequestedLocationRef.current) {
+      return;
+    }
+
+    hasRequestedLocationRef.current = true;
+    requestCurrentLocationWeather();
   }, [dispatch, user, weatherCards.length]);
 
   const onSearch = (event) => {
@@ -178,7 +189,17 @@ const Dashboard = () => {
           >
             Refresh Favorites
           </button>
+          <button
+            type="button"
+            className="h-12 rounded-2xl bg-emerald-500/80 px-6 font-medium text-white transition-all duration-300 hover:scale-105"
+            onClick={requestCurrentLocationWeather}
+          >
+            Use Current Location
+          </button>
         </div>
+        {locationHint ? (
+          <p className="mt-3 text-sm text-amber-200">{locationHint}</p>
+        ) : null}
       </form>
 
       {weatherState.status === "loading" ? (
