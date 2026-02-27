@@ -1,15 +1,7 @@
 import { clearAuthCookie, createToken, setAuthCookie } from "../services/tokenService.js";
-import mongoose from "mongoose";
 
 export const handleGoogleCallback = async (req, res, next) => {
   try {
-    console.log("[auth/callback] req.user present:", Boolean(req.user));
-    console.log("[auth/callback] JWT_SECRET configured:", Boolean(process.env.JWT_SECRET));
-    console.log(
-      "[auth/callback] mongo readyState:",
-      mongoose.connection?.readyState ?? "unknown",
-    );
-
     if (!req.user?._id) {
       return res.status(401).json({ message: "Authentication failed" });
     }
