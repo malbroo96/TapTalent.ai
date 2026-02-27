@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -20,6 +20,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [city, setCity] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchContainerRef = useRef(null);
 
   const weatherState = useSelector((state) => state.weather);
   const favorites = useSelector((state) => state.user.favorites);
@@ -59,6 +60,19 @@ const Dashboard = () => {
       dispatch(fetchFavorites());
     }
   }, [dispatch, user]);
+
+  useEffect(() => {
+    const onPointerDown = (event) => {
+      if (!searchContainerRef.current?.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+    };
+  }, []);
 
   useEffect(() => {
     if (!user || weatherCards.length > 0) {
@@ -117,15 +131,12 @@ const Dashboard = () => {
         className="relative z-30 rounded-2xl border border-slate-300/70 bg-white/75 p-4 backdrop-blur-xl dark:border-white/20 dark:bg-white/10"
       >
         <div className="flex flex-col gap-3 md:flex-row">
-          <div className="relative z-40 flex-1">
+          <div ref={searchContainerRef} className="relative z-40 flex-1">
             <input
               className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-slate-900 outline-none transition-all duration-300 focus:border-cyan-400 dark:border-white/20 dark:bg-slate-950/40 dark:text-white"
               placeholder="Search city weather..."
               value={city}
               onFocus={() => setShowSuggestions(true)}
-              onBlur={() => {
-                setTimeout(() => setShowSuggestions(false), 120);
-              }}
               onChange={(e) => {
                 setCity(e.target.value);
                 setShowSuggestions(true);

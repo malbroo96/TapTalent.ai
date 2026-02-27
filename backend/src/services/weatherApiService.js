@@ -92,6 +92,25 @@ export const fetchCurrentWeather = async (city) => {
   }
 };
 
+export const fetchCurrentWeatherByCoordinates = async ({ lat, lon }) => {
+  const apiKey = getApiKey();
+  try {
+    const response = await axios.get(`${WEATHER_BASE_URL}/weather`, {
+      params: {
+        lat,
+        lon,
+        appid: apiKey,
+        units: "metric",
+      },
+      timeout: 10000,
+    });
+
+    return normalizeCurrent(response.data);
+  } catch (error) {
+    throw toServiceError(error);
+  }
+};
+
 export const fetchForecastWeather = async (city) => {
   const apiKey = getApiKey();
   try {
