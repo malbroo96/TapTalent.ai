@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchWeatherByCity } from "../../controllers/weatherController";
+import {
+  fetchWeatherByCity,
+  fetchWeatherByCoordinates,
+} from "../../controllers/weatherController";
 import { removeWeatherCity } from "../../store/weatherSlice";
 import {
   addFavoriteCity,
@@ -56,6 +59,31 @@ const Dashboard = () => {
       dispatch(fetchFavorites());
     }
   }, [dispatch, user]);
+
+  useEffect(() => {
+    if (!user || weatherCards.length > 0) {
+      return;
+    }
+
+    if (!("geolocation" in navigator)) {
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        dispatch(
+          fetchWeatherByCoordinates({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+          }),
+        );
+      },
+      () => {
+        // If denied or unavailable, keep manual search flow.
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+    );
+  }, [dispatch, user, weatherCards.length]);
 
   const onSearch = (event) => {
     event.preventDefault();
