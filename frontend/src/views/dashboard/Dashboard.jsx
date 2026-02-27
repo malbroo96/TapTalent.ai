@@ -110,6 +110,10 @@ const Dashboard = () => {
                     key={name}
                     type="button"
                     className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-800 transition-all duration-300 hover:bg-slate-200/70 dark:text-slate-100 dark:hover:bg-white/15"
+                    onMouseDown={(event) => {
+                      // Keep focus on input until click handler runs.
+                      event.preventDefault();
+                    }}
                     onClick={() => onSuggestionSelect(name)}
                   >
                     {name}
